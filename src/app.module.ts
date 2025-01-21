@@ -14,9 +14,18 @@ import { JwtStrategy } from './core/jwt-auth-guard/jwt.strategy';
 import { RabbitMqConfigModule } from './config/rabbitmq-config.module';
 import { APP_FILTER } from '@nestjs/core';
 import { CatchAppExceptionsFilter } from './core/error-handling/error.filter';
+import { TypeOrmConfigModule } from './config/typeorm.module';
+import { TodoModule } from './todo/todo.module';
 
 @Module({
-  imports: [MongodbModule, HttpModule, RabbitMqConfigModule],
+  imports: [
+    process.env.DATABASE_TYPE === 'nosql' 
+      ? MongodbModule.forRoot()
+      : TypeOrmConfigModule,
+    HttpModule,
+    RabbitMqConfigModule,
+    TodoModule
+  ],
   controllers: [AppController],
   providers: [
     AppService,
