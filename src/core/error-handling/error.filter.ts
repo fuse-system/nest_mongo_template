@@ -1,7 +1,6 @@
 import { ArgumentsHost, Catch, HttpException } from '@nestjs/common';
 import { BaseExceptionFilter } from '@nestjs/core';
 import { Error } from 'mongoose';
-import { QueryFailedError, TypeORMError } from 'typeorm';
 
 interface MongoError {
   driver?: boolean;
@@ -33,24 +32,12 @@ export class CatchAppExceptionsFilter extends BaseExceptionFilter {
       this.handleNestError(exception.response, object);
     } else if (exception instanceof HttpException) {
       this.handleHttpException(exception, object);
-    } else if (process.env.DATABASE_TYPE === 'nosql') {
-      // MongoDB error handling
-      if (exception.name === 'ValidationError') {
-        this.handleMongoValidationError(exception, object);
-      } else if (exception.name === 'CastError') {
-        this.handleCastError(exception, object);
-      } else if (exception.code === 11000) {
-        this.handleDuplicationError(exception, object);
-      }
-    } else {
-      // TypeORM error handling
-      if (exception instanceof QueryFailedError) {
-        this.handleTypeORMError(exception, object);
-      } else if (exception instanceof TypeORMError) {
-        this.handleTypeORMGenericError(exception, object);
-      } else {
-        this.internalError(res, exception);
-      }
+    } else if (exception.name === 'ValidationError') {
+      this.handleMongoValidationError(exception, object);
+    } else if (exception.name === 'CastError') {
+      this.handleCastError(exception, object);
+    } else if (exception.code === 11000) {
+      this.handleDuplicationError(exception, object);
     }
     res.status(object.code).send(object);
   }
@@ -92,20 +79,5 @@ export class CatchAppExceptionsFilter extends BaseExceptionFilter {
     } else {
       res.status(500).send({ ...exception });
     }
-  }
-
-  // New TypeORM error handlers
-  handleTypeORMError(exception: QueryFailedError, object: ServerError) {
-    if (exception.message.includes('duplicate')) {
-      object.message = 'Duplicate entry found';
-    } else {
-      object.message = 'Database query failed';
-    }
-    object.code = 400;
-  }
-
-  handleTypeORMGenericError(exception: TypeORMError, object: ServerError) {
-    object.message = exception.message;
-    object.code = 400;
   }
 }

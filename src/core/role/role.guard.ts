@@ -23,7 +23,9 @@ export class RoleGuard implements CanActivate {
 
     if (!requiredRole.includes(user.role)) {
       throw new UnauthorizedException(
-        `Access denied: You must have the role of ${requiredRole.join(' & ')} to access this resource.`,
+        `Access denied: You must have the role of ${requiredRole.join(
+          ' & ',
+        )} to access this resource.`,
       );
     }
 
